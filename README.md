@@ -1,2 +1,2 @@
 # Pachacutec
-Discord music bot 
+Discord.py bot
