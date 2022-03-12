@@ -42,41 +42,42 @@ class Music(commands.Cog):
 
     @commands.command(name="play", aliases=["p"], description="Reproduce canciones")
     async def play(self, ctx, *, music):
-        if music == None:
-            await ctx.send("Tienes que poner el nombre o el link de alguna canción")
-        else:
             if ctx.author.voice is None:
-                await ctx.send("No estás en ningún canal")
-            voice_channel = ctx.author.voice.channel
-            if ctx.voice_client is None:
-                await voice_channel.connect()
+                await ctx.send("No estás en ningún canal, únete a uno para poder disfrutar de la música")
             else:
-                await ctx.voice_client.move_to(voice_channel)
-            YDL_OPTIONS = {'format': "bestaudio"}
-            self.vc = ctx.voice_client
-
-            with youtube_dl.YoutubeDL(YDL_OPTIONS) as ydl:
-                if music.startswith("https://www.youtube.com")or music.startswith("https://youtu.be"):
-                    info = ydl.extract_info(music , download=False)
+                voice_channel = ctx.author.voice.channel
+                if ctx.voice_client is None:
+                    await voice_channel.connect()
                 else:
-                    info = ydl.extract_info("ytsearch:%s" %music , download=False)['entries'][0]
-
-                if info['duration'] >= 3600:
-                    duration = time.strftime("%H:%M:%S", time.gmtime(info['duration']))
+                    await ctx.voice_client.move_to(voice_channel)
+                if music is None:
+                    await ctx.send("Tienes que poner el nombre o el link de alguna canción")
                 else:
-                    duration = time.strftime("%M:%S", time.gmtime(info['duration']))
-                self.music_queue.append({'source': info['formats'][0]['url'], 'title': info['title'], 'duration': duration})
-            if self.is_playing == False:
-                self.is_playing = True
-                m_url = self.music_queue[0]['source']
-                title = self.music_queue[0]['title']
-                duration = self.music_queue[0]['duration']
-                source = await discord.FFmpegOpusAudio.from_probe(m_url, **self.FFMPEG_OPTIONS)
-                self.vc.play(source, after=lambda x: self.next())
-                await ctx.send('▶️ Reproduciendo...\n' + '**' + title + '** | (`' + duration + '`)')
-            else:
-                title = info['title']
-                await ctx.send('**' + title + '** | (`' + duration + '`) añadido a la cola')
+                    YDL_OPTIONS = {'format': "bestaudio"}
+                    self.vc = ctx.voice_client
+
+                    with youtube_dl.YoutubeDL(YDL_OPTIONS) as ydl:
+                        if music.startswith("https://www.youtube.com")or music.startswith("https://youtu.be"):
+                            info = ydl.extract_info(music , download=False)
+                        else:
+                            info = ydl.extract_info("ytsearch:%s" %music , download=False)['entries'][0]
+
+                        if info['duration'] >= 3600:
+                            duration = time.strftime("%H:%M:%S", time.gmtime(info['duration']))
+                        else:
+                            duration = time.strftime("%M:%S", time.gmtime(info['duration']))
+                        self.music_queue.append({'source': info['formats'][0]['url'], 'title': info['title'], 'duration': duration})
+                    if self.is_playing == False:
+                        self.is_playing = True
+                        m_url = self.music_queue[0]['source']
+                        title = self.music_queue[0]['title']
+                        duration = self.music_queue[0]['duration']
+                        source = await discord.FFmpegOpusAudio.from_probe(m_url, **self.FFMPEG_OPTIONS)
+                        self.vc.play(source, after=lambda x: self.next())
+                        await ctx.send('▶️ Reproduciendo...\n' + '**' + title + '** | (`' + duration + '`)')
+                    else:
+                        title = info['title']
+                        await ctx.send('**' + title + '** | (`' + duration + '`) añadido a la cola')
 
     @commands.command(name="pause", aliases=["ps"], description="Pausa la canción")
     async def pause(self, ctx):
