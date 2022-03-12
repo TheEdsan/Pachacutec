@@ -42,6 +42,9 @@ class Music(commands.Cog):
 
     @commands.command(name="play", aliases=["p"], description="Reproduce canciones")
     async def play(self, ctx, *, music):
+        if music is None:
+                    await ctx.send("Tienes que poner el nombre o el link de alguna canción")
+        else:
             if ctx.author.voice is None:
                 await ctx.send("No estás en ningún canal, únete a uno para poder disfrutar de la música")
             else:
@@ -50,23 +53,20 @@ class Music(commands.Cog):
                     await voice_channel.connect()
                 else:
                     await ctx.voice_client.move_to(voice_channel)
-                if music is None:
-                    await ctx.send("Tienes que poner el nombre o el link de alguna canción")
-                else:
-                    YDL_OPTIONS = {'format': "bestaudio"}
-                    self.vc = ctx.voice_client
+                YDL_OPTIONS = {'format': "bestaudio"}
+                self.vc = ctx.voice_client
 
-                    with youtube_dl.YoutubeDL(YDL_OPTIONS) as ydl:
-                        if music.startswith("https://www.youtube.com")or music.startswith("https://youtu.be"):
-                            info = ydl.extract_info(music , download=False)
-                        else:
-                            info = ydl.extract_info("ytsearch:%s" %music , download=False)['entries'][0]
+                with youtube_dl.YoutubeDL(YDL_OPTIONS) as ydl:
+                    if music.startswith("https://www.youtube.com")or music.startswith("https://youtu.be"):
+                        info = ydl.extract_info(music , download=False)
+                    else:
+                        info = ydl.extract_info("ytsearch:%s" %music , download=False)['entries'][0]
 
-                        if info['duration'] >= 3600:
-                            duration = time.strftime("%H:%M:%S", time.gmtime(info['duration']))
-                        else:
-                            duration = time.strftime("%M:%S", time.gmtime(info['duration']))
-                        self.music_queue.append({'source': info['formats'][0]['url'], 'title': info['title'], 'duration': duration})
+                    if info['duration'] >= 3600:
+                        duration = time.strftime("%H:%M:%S", time.gmtime(info['duration']))
+                    else:
+                        duration = time.strftime("%M:%S", time.gmtime(info['duration']))
+                    self.music_queue.append({'source': info['formats'][0]['url'], 'title': info['title'], 'duration': duration})
                     if self.is_playing == False:
                         self.is_playing = True
                         m_url = self.music_queue[0]['source']
